@@ -14,8 +14,10 @@
 #include "../Lib/Exceptions/NotEnoughDestructionRolledException.h"
 #include "../Lib/Exceptions/MapNotLoadedException.h"
 #include "../Deck/TileDeck.h"
+#include "../Lib/ObserverPattern/Subject.h"
 
-class Player
+//the player class will be a subject being observed for the game statistics
+class Player : public Subject
 {
   private:
     static Characters* chosenCharacters; // an array holding all the characters that have been chosen so far so that no character is played by more than one player
@@ -65,7 +67,7 @@ class Player
     void buyCards(CardDeck*); //a method to allow the player to buy cards
     SinglyLinkedList<Card>* getCards(); //gets the list of cards the player has in his hand
     static SinglyLinkedList<Player*>* players; // a singly linked list containing a pointer to each player
-	
+
 	void removePlayer(enum Characters);
 };
 

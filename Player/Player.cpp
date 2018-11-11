@@ -841,7 +841,7 @@ void Player::resolveDice()
 					current = buildings->getHead();
 					int j = 1; //we need to go up to the building that he said
 					//Tile toDestroy; //the tile that he wants to destroy
-					Tile* toDestroy = nullptr;
+					Tile* toDestroy = NULL;
 
 					while (j <= buildingSelected)
 					{
