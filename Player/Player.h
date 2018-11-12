@@ -32,7 +32,6 @@ class Player : public Subject
     void initializeChosenCharacters(); //a method to initialize the chosen characters when beginning the game
     Dice* dice; //the dice that the player will be rolling
     SinglyLinkedList<Card>* cards; // this is a linked list holding all the cards that the player has in his hand
-    //TODO add linked list of tokens
 
   public:
     Player(); //default constructor

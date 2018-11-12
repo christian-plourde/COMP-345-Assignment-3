@@ -31,7 +31,6 @@ void Dice::roll()
 {
   //method to roll the dice.
   //we need to create a random number generator
-  std::cout << "Rolling all the dice..." << std::endl;
 
   //we need to generate 6 random numbers
   RandomNumberGenerator* r = new RandomNumberGenerator(time(NULL)); //my random number generator, seed with the time this time, otherwise
