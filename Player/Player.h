@@ -15,6 +15,7 @@
 #include "../Lib/Exceptions/MapNotLoadedException.h"
 #include "../Deck/TileDeck.h"
 #include "../Lib/ObserverPattern/Subject.h"
+#include "Phase.h"
 
 //the player class will be a subject being observed for the game statistics
 class Player : public Subject
@@ -29,6 +30,7 @@ class Player : public Subject
     int energy; //the number of energy cubes the player has
     int victoryPoints; //the number of victoryPoints the player has
     int zone; //the zone that the player is currently in
+    enum Phase phase; //this will track which phase the player is in
     void initializeChosenCharacters(); //a method to initialize the chosen characters when beginning the game
     Dice* dice; //the dice that the player will be rolling
     SinglyLinkedList<Card>* cards; // this is a linked list holding all the cards that the player has in his hand
@@ -47,6 +49,8 @@ class Player : public Subject
     std::string toString(); //returns a string containing information about the current status of the player
     enum Characters getCharacter(); //get the character that the player is playing as
     void setCharacter(enum Characters); //set the character that the player is playing as
+    enum Phase getPhase(); //gets the phase of the game that the player is in
+    void setPhase(enum Phase); //sets the phase of the game that the player is in
     static int getPlayerCount(); //get the number of players in the game
     static void setPlayerCount(int); //set the number of players in the game
     void setPlayerNumber(int); //set the number of the player: player1, player2, etc.

@@ -31,6 +31,7 @@ Player::Player()
 	node<Player*>* newNode = new node<Player*>();
 	newNode->setData(this);
 	players->add(newNode);
+	phase = Roll; //initialize the phase to roll since that is what the player will be doing first
 }
 
 Player::Player(std::string name)
@@ -54,6 +55,7 @@ Player::Player(std::string name)
 	node<Player*>* newNode = new node<Player*>();
 	newNode->setData(this);
 	players->add(newNode);
+	phase = Roll;
 }
 
 Player::~Player()
@@ -102,6 +104,16 @@ void Player::setCharacter(enum Characters character)
 		chosenCharacters[playerCount - 1] = character;
 
 	}
+}
+
+enum Phase Player::getPhase()
+{
+	return phase;
+}
+
+void Player::setPhase(enum Phase p)
+{
+	phase = p;
 }
 
 std::string Player::toString()
