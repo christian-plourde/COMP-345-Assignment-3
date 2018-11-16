@@ -16,6 +16,10 @@
 #include "../Deck/TileDeck.h"
 #include "../Lib/ObserverPattern/Subject.h"
 #include "Phase.h"
+#include "../Lib/ObserverPattern/Observer.h"
+#include "../Lib/ObserverPattern/GameStatisticsObserver.h"
+#include "../Lib/ObserverPattern/GamePhaseObserver.h"
+
 
 //the player class will be a subject being observed for the game statistics
 class Player : public Subject

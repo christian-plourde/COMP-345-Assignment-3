@@ -82,7 +82,7 @@ int main()
 		playerNodes = Player::players->getHead();
 		while (playerNodes) {
 			playerData = playerNodes->getData();
-			cout << std::endl << playerData->getName() << "'s turn" << std::endl;
+
 			// 1. Roll the Dice (up to 3 times)
 			playerData->rollDice();
 			// 2. Resolve the Dice
@@ -112,7 +112,7 @@ int main()
 						playerZone = curr->getData()->getZone();
 						if (playerZone <= 6) {
 							playersInManhatten = true;
-							break;	
+							break;
 						}
 						curr = curr->getNext();
 					}
@@ -192,9 +192,6 @@ int main()
 
 				// 4. Buy Cards (optional)
 				playerData->buyCards(cardDeck);
-				std::cout << std::endl << "END OF TURN, HEALTH: " << playerData->getHealth() << std::endl;
-				std::cout << "VICTORY POINTS: " << playerData->getVictoryPoints() << std::endl;
-				std::cout << "ZONE: " << MapLoader::getMap()->getVertex(playerData->getZone())->getName() << std::endl;
 				// 5. End Turn
 				// get next player
 				playerNodes = playerNodes->getNext();

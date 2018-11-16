@@ -32,6 +32,10 @@ Player::Player()
 	newNode->setData(this);
 	players->add(newNode);
 	phase = Roll; //initialize the phase to roll since that is what the player will be doing first
+
+	//the player will also require a gamestatisticsobserver as well as a gamephaseobserver
+	attach(new GamePhaseObserver(this));
+	attach(new GameStatisticsObserver());
 }
 
 Player::Player(std::string name)
@@ -56,6 +60,8 @@ Player::Player(std::string name)
 	newNode->setData(this);
 	players->add(newNode);
 	phase = Roll;
+	attach(new GamePhaseObserver(this));
+	attach(new GameStatisticsObserver());
 }
 
 Player::~Player()
@@ -256,6 +262,10 @@ void Player::rollDice()
 	//a method to roll the dice that the player is using as per the rules of the game
 	//on the first roll, which is mandatory, all dice must be rolled
 
+	//first set the phase of the player object to roll and notify the observers
+	phase = Roll;
+	notify();
+
 	int rollCount = 0; //this will track the number of times that the dice have been rolled
 
 	//the player will roll once regardless of the situation
@@ -322,6 +332,9 @@ void Player::rollDice()
 void Player::rollDiceOnce()
 {
 	//a method to roll only once, used in determining the order of play
+	//first set the phase to roll and notify the observers
+	phase = Roll;
+	notify();
 
 	//the player will roll once only
 	dice->roll();
@@ -334,6 +347,10 @@ void Player::move()
 	bool regionIsValid = false; //a check to see if the region that the player wants to move to is valid
 	int region = 0; //the index of the region where the player wants to move (these match the index of the region in the array)
 					//in the graph
+
+	//we also need to change the game phase and notify the observers
+	phase = Move;
+	notify();
 
 	//if the zone the player wishes to move to already contains two players, he cannot move there.
 	//to know if there are already two players in that zone, all we need to do is check where every other player is
@@ -505,6 +522,8 @@ void Player::move()
 				{
 					alreadyFull = false;
 					this->setZone(innerNodes[i]);
+					//if we were able to move into the goal region, we should grant one victory point to the player
+					victoryPoints++;
 					regionIsValid = true;
 					break;
 				}
@@ -1044,6 +1063,10 @@ void Player::buyCards(CardDeck* deck)
 	//when the player wants to buy cards, the top three cards in the deck are revealed.
 	//since we know that three cards will be revealed, assuming there are three cards to reveal, then
 	//we should display those three cards
+
+	//we need to change the phase and notify the observers
+	phase = Buy;
+	notify();
 
 	//this variable will hold the response that the player has given
 	std::string response = "";

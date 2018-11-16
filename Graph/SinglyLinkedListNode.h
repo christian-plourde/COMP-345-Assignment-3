@@ -31,8 +31,7 @@ node<T>::node()
 template <class T>
 node<T>::~node()
 {
-  //the destructor for the node class
-
+  
 }
 
 template <class T>

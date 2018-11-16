@@ -19,7 +19,7 @@ void GameStatisticsObserver::Update()
     std::cout << "-----------------------------------" << std::endl;
     std::cout << "HEALTH POINTS: " << curr -> getData() -> getHealth() << std::endl;
     std::cout << "VICTORY POINTS: " << curr -> getData() -> getVictoryPoints() << std::endl;
-    std::cout << "ENERGY CUBES: " << curr -> getData() -> getVictoryPoints() << std::endl;
+    std::cout << "ENERGY CUBES: " << curr -> getData() -> getEnergy() << std::endl;
     //finally we need to output their current location
     int currentZone = curr -> getData() -> getZone();
     Graph<std::string>* map = MapLoader::getMap();
