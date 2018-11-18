@@ -1,5 +1,6 @@
 #include "Dice.h"
 #include "../Lib/RandomNumberGenerator/RandomNumberGenerator.h"
+//#include "RandomNumberGenerator.h"
 #include "DiceFacesMethods.h"
 #include <time.h>
 #include <iostream>
@@ -135,6 +136,60 @@ void Dice::rollSelectedDice()
     randomNumbers = NULL;
 
   }
+
+}
+
+void Dice::rollSelectedDice(int indices[6], int noDiceToReRoll)
+{
+	setDiceToReRoll(noDiceToReRoll);
+
+	//now inside dice, we have an array of integers that corresponds to the dice that we wish to reroll
+	//since the indices range from 1 to 6 for user convenience, we need to make sure that when indicating which dice to reroll
+	//in the rolled[] array that we subtract 1 since those indices start at 0
+
+	//first we need to check how many dice were actually selected
+
+	if (diceToReRoll == 0)
+	{
+		//if the user said he didn't want to reroll the dice, then we simply return
+		//make sure to free the resources since we don't need them anymore
+		return;
+	}
+
+	else if (diceToReRoll == 6)
+	{
+		//if the user said he wanted to reroll all the dice, then we call the simple roll method
+		//make sure to free the resources since we don't need them anymore
+		roll();
+		return;
+	}
+
+	else
+	{
+		//we will need to generate the right number of random numbers
+		//we need to generate (diceToReRoll) random numbers
+
+		RandomNumberGenerator* r = new RandomNumberGenerator();
+		long* randomNumbers = r->randomGen(diceToReRoll, 0, 6);
+
+		int randomNumberIndex = 0; //this will keep track of which random number we are at in our assignment
+
+		//now we have an array with diceToReRoll random numbers between 0 and 6 that we need to assign the right indices
+
+		for (int j = 0; j < diceToReRoll; j++)
+		{
+			//for each dice in the dice array, assign the current value of the random number array to the rolled array
+			rolled[indices[j]] = static_cast<enum DiceFaces>(randomNumbers[randomNumberIndex]);
+			randomNumberIndex++; //then increment the randomNumberIndex so that in the next iteration we take the next random number
+		}
+
+		//make sure to free the resources since we don't need them anymore
+		delete r;
+		r = NULL;
+		delete[] randomNumbers;
+		randomNumbers = NULL;
+
+	}
 
 }
 

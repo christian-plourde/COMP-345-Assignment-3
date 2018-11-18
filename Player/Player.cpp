@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
-#include "../Lib/Exceptions/NodeFullException.h"
-//#include "NodeFullException.h"
+//#include "../Lib/Exceptions/NodeFullException.h"
+#include "NodeFullException.h"
 #include "Player.h"
 
 //declaring the static variables
@@ -121,6 +121,15 @@ void Player::setPhase(enum Phase p)
 {
 	phase = p;
 }
+
+void Player::setStrategy(Strategy *initStrategy) {
+	this->strategy = initStrategy;
+}
+
+void Player::executeStrategy(Player* playerData, CardDeck* cardDeck) {
+	return this->strategy->execute(playerData, cardDeck);
+}
+
 
 std::string Player::toString()
 {
@@ -540,6 +549,37 @@ void Player::move()
 	playerPositions = NULL;
 }
 
+void Player::cpuMove() {
+	Tile* tileDeck;
+	tileDeck = TileDeck::getTileDeck();
+	int *zoneTrack;
+	zoneTrack = new int[MapLoader::getMap()->getVertexCount()];
+	for (int i = 0; i < MapLoader::getMap()->getVertexCount(); i++)
+		zoneTrack[i] = 0;
+	int maxZone = 0;
+	int count = 0;
+	for (int i = 0; i < MapLoader::getMap()->getVertexCount(); i++) {
+		count = 0;
+		if (MapLoader::getMap()->getVertex(i)->getData() != "master" && MapLoader::getMap()->getVertex(i)->getData() != "inner")
+		{
+			for (int j = 0; j < 45; j++)
+			{
+				if (tileDeck[j].getZone() == MapLoader::getMap()->getVertex(i)->getIndex() && !tileDeck[j].getIsDestroyed())
+					count++;
+			}
+			zoneTrack[i] = count;
+		}
+	}
+	for (int i = 0; i < MapLoader::getMap()->getVertexCount(); i++) {
+		if (zoneTrack[i] > zoneTrack[maxZone])
+			maxZone = i;
+	}
+	if (MapLoader::getMap()->getVertex(maxZone)->getData() != "master" && MapLoader::getMap()->getVertex(maxZone)->getData() != "inner")
+		this->setZone(maxZone);
+	delete[] zoneTrack;
+}
+
+
 SinglyLinkedList<Card>* Player::getCards()
 {
 	return cards;
@@ -595,6 +635,7 @@ void Player::resolveDice()
 			//if the player is within manhattan, then each player outside of manhattan loses a health point for each attack rolled
 			//we need to go through each node in our player list and check if the player is outside manhattan
 			node<Player*>* currentNode = players->getHead();
+			node<Player*>* curr = currentNode;
 
 			while (currentNode != NULL)
 			{
@@ -606,6 +647,9 @@ void Player::resolveDice()
 				}
 				//then move to the next node in the list
 				currentNode = currentNode->getNext();
+				if (curr->getData()->getHealth() == 0)
+					removePlayer(curr->getData()->getCharacter());
+				curr = currentNode;
 			}
 
 		}
@@ -822,218 +866,10 @@ void Player::resolveDice()
 				throw buildings->getCount();
 			}
 
-			//if the list was not empty, then we are here
-			//we should display all of the
-			//node<Tile>* current = buildings->getHead();
-			node<int>* current = buildings->getHead();
-			int nodeCount = 1; //this is to display the options for the player
-			bool validResponse = false; //to track if the response from the player was valid or not
-			bool destroyMoreBuildings = true; //to ask the player if he would like to destroy more buildings
-			std::string destroyResponse = ""; //the response of the player when he is asked if he would like to destroy more
-											  //buildings
-			do
-			{
-				//reinitialize the parameters in the case where the player wants to destroy more than one buildings
-				validResponse = false;
-				nodeCount = 1;
-				destroyMoreBuildings = true;
-				current = buildings->getHead();
-				destroyMoreBuildings = true;
-
-				//we need to get a response from the player
-				std::cout << "Please select a building to destroy: " << std::endl;
-
-				while (current != NULL)
-				{
-					//we should show him the information about the building
-					std::cout << nodeCount << ". ";
-					//current->getData().Print();
-					tileDeck[current->getData()].Print();
-					nodeCount++;
-					current = current->getNext();
-				}
-
-				//now that he has seen the options, he must select which building he would like to destroy
-				try
-				{
-					//we will try to get a response from the player
-					std::cout << "Please enter your choice here: ";
-					std::cin >> buildingSelected;
-
-					if (buildingSelected < 1 || buildingSelected > buildings->getCount())
-					{
-						//if the building he chose is outside the bounds of the list, then this is not a valid response
-						throw buildingSelected;
-					}
-
-					//we also need to check if the player has rolled enough destruction to detroy the building he wishes
-					//to destroy
-					//first we need to find the building that he wishes to destroy
-					current = buildings->getHead();
-					int j = 1; //we need to go up to the building that he said
-					//Tile toDestroy; //the tile that he wants to destroy
-					Tile* toDestroy = NULL;
-
-					while (j <= buildingSelected)
-					{
-						//toDestroy = current->getData(); //set the tile to destroy to the one in the current node
-						toDestroy = &tileDeck[current->getData()];
-						j++; //increment j
-
-						current = current->getNext(); //move to the next node in the list
-					}
-
-					//now if the durability of the building is greater than the destruction count of the player, then we should throw
-					//an exception
-
-					if (toDestroy->getDurability() > destructionCount)
-					{
-						throw NotEnoughDestructionRolledException();
-					}
-
-					//if we made it here, it means that the response was valid
-					validResponse = true;
-
-					//now we should destroy the building that the player wants to destroy
-					//since this only works for buildings, the tile in question should be flipped
-
-					std::cout << "Before destruction: " << std::endl;
-
-					//we should decrease the destructionCount by the durability of the building
-					destructionCount -= toDestroy->getDurability();
-					toDestroy->Print(); //show the tile before destruction
-
-					int rew = toDestroy->getReward();
-
-					//we also need to assign the rewards for the player who destroyed the building
-
-					if (toDestroy->getRewardType() == star)
-					{
-						if (this->victoryPoints + rew <= 20)
-							this->victoryPoints = this->victoryPoints + rew;
-
-						else
-							this->victoryPoints = 20;
-					}
-
-					if (toDestroy->getRewardType() == heart)
-					{
-						if (this->health + rew <= 10)
-							this->health = this->health + rew;
-						else
-							this->health = 10;
-					}
-
-					if (toDestroy->getRewardType() == energy)
-					{
-						this->energy = this->energy + rew;
-					}
-
-					//we now need to flip the tile that was destroyed
-
-
-					//this code is the same as in the flip tile method in the tiledeck, but I dont have to create an object to do it
-					switch (toDestroy->getUnit())
-					{
-					case Infantry: toDestroy->setRewardType(heart); break;
-					case Jet: toDestroy->setRewardType(static_cast<Rewards>(energy)); break;
-					case Tank: toDestroy->setRewardType(star); break;
-					}
-
-					int durability = toDestroy->getDurability();
-					durability++;
-					toDestroy->setDurability(durability);
-
-					toDestroy->setisUnit(true);
-
-					std::cout << "After Destruction: " << std::endl;
-					toDestroy->Print(); //print the tile after destruction
-
-					//we should also remove it from the linked list in case he wants to destroy more buildings
-					//we need to find the node that was destroyed in the list
-					j = 1;
-					current = buildings->getHead();
-
-					while (j < buildingSelected)
-					{
-						j++;
-						current = current->getNext();
-					}
-
-					//now that we have found the node, we can remove it
-					buildings->pull(current);
-
-					std::cout << "Building destroyed!" << std::endl;
-
-					//now that the building has been destroyed, if the player still has destruction dice, then we should ask him
-					//if he wants to destroy more buildings
-
-					if (destructionCount > 0)
-					{
-						//if he still has dice, we need to ask him if he wants to destroy some more buildings
-						bool valid = false; //check if the response was valid
-						do
-						{
-							try
-							{
-								//ask the player if we wants to destroy more buildings
-								std::cout << "You have " << destructionCount << " dice left for destruction. Would you like to destroy "
-									<< "more buildings? Please enter (Y/N): ";
-
-								//place the response in destroy response
-								std::cin >> destroyResponse;
-
-								if (destroyResponse != "Y" && destroyResponse != "N")
-								{
-									//if the response was invalid, then we throw it
-									throw destroyResponse;
-								}
-							}
-
-							catch (std::string e)
-							{
-								//if the response was invalid we are here
-								std::cout << "The response '" << destroyResponse << "' is invalid. Please try again..." << std::endl;
-								valid = false; //valid response is false and force a new iteration
-								continue;
-							}
-
-							//if the response was valid then we are here
-							valid = true;
-							//if he said yes then he wants to destroy more buildings
-							if (destroyResponse == "Y")
-								destroyMoreBuildings = true;
-
-							//otherwise he is done destroying
-							else
-								destroyMoreBuildings = false;
-
-						} while (!valid);
-
-					}
-
-					else
-					{
-						//if the player has no more destruction dice, then he is done
-						std::cout << "You don't have any more destruction dice." << std::endl;
-						destroyMoreBuildings = false;
-					}
-
-				}
-
-				catch (int e)
-				{
-					//if the player entered a number outside the bounds of the list
-					std::cout << "The number " << buildingSelected << " is not a valid choice. Please try again..." << std::endl;
-				}
-
-				catch (NotEnoughDestructionRolledException e)
-				{
-					//if we are here, it means that the player did not have enough destruction dice to destroy that building
-					std::cout << e.what() << std::endl;
-				}
-
-			} while (!validResponse || destroyMoreBuildings);
+			if (this->getName() != "Aggressive CPU" && this->getName() != "Moderate CPU")
+				destroyBuildings(buildings, destructionCount);
+			else
+				cpuDestroyBuildings(buildings, destructionCount);
 
 
 		}
@@ -1054,6 +890,402 @@ void Player::resolveDice()
 	if (this->getHealth() == 0)
 		this->removePlayer(this->getCharacter());
 }
+
+void Player::destroyBuildings(SinglyLinkedList<int>* buildings, int destructionCount) {
+	Tile* tileDeck;
+	tileDeck = TileDeck::getTileDeck();
+	//if the list was not empty, then we are here
+			//we should display all of the
+			//node<Tile>* current = buildings->getHead();
+	node<int>* current = buildings->getHead();
+	int nodeCount = 1; //this is to display the options for the player
+	bool validResponse = false; //to track if the response from the player was valid or not
+	bool destroyMoreBuildings = true; //to ask the player if he would like to destroy more buildings
+	std::string destroyResponse = ""; //the response of the player when he is asked if he would like to destroy more
+									  //buildings
+	int buildingSelected = 0;
+	do
+	{
+		//reinitialize the parameters in the case where the player wants to destroy more than one buildings
+		validResponse = false;
+		nodeCount = 1;
+		destroyMoreBuildings = true;
+		current = buildings->getHead();
+		destroyMoreBuildings = true;
+
+		//we need to get a response from the player
+		std::cout << "Please select a building to destroy: " << std::endl;
+
+		while (current != NULL)
+		{
+			//we should show him the information about the building
+			std::cout << nodeCount << ". ";
+			//current->getData().Print();
+			tileDeck[current->getData()].Print();
+			nodeCount++;
+			current = current->getNext();
+		}
+
+		//now that he has seen the options, he must select which building he would like to destroy
+		try
+		{
+			//we will try to get a response from the player
+			std::cout << "Please enter your choice here: ";
+			std::cin >> buildingSelected;
+
+			if (buildingSelected < 1 || buildingSelected > buildings->getCount())
+			{
+				//if the building he chose is outside the bounds of the list, then this is not a valid response
+				throw buildingSelected;
+			}
+
+			//we also need to check if the player has rolled enough destruction to detroy the building he wishes
+			//to destroy
+			//first we need to find the building that he wishes to destroy
+			current = buildings->getHead();
+			int j = 1; //we need to go up to the building that he said
+			//Tile toDestroy; //the tile that he wants to destroy
+			Tile* toDestroy = NULL;
+
+			while (j <= buildingSelected)
+			{
+				//toDestroy = current->getData(); //set the tile to destroy to the one in the current node
+				toDestroy = &tileDeck[current->getData()];
+				j++; //increment j
+
+				current = current->getNext(); //move to the next node in the list
+			}
+
+			//now if the durability of the building is greater than the destruction count of the player, then we should throw
+			//an exception
+
+			if (toDestroy->getDurability() > destructionCount)
+			{
+				throw NotEnoughDestructionRolledException();
+			}
+
+			//if we made it here, it means that the response was valid
+			validResponse = true;
+
+			//now we should destroy the building that the player wants to destroy
+			//since this only works for buildings, the tile in question should be flipped
+
+			std::cout << "Before destruction: " << std::endl;
+
+			//we should decrease the destructionCount by the durability of the building
+			destructionCount -= toDestroy->getDurability();
+			toDestroy->Print(); //show the tile before destruction
+
+			int rew = toDestroy->getReward();
+
+			//we also need to assign the rewards for the player who destroyed the building
+
+			if (toDestroy->getRewardType() == star)
+			{
+				if (this->victoryPoints + rew <= 20)
+					this->victoryPoints = this->victoryPoints + rew;
+
+				else
+					this->victoryPoints = 20;
+			}
+
+			if (toDestroy->getRewardType() == heart)
+			{
+				if (this->health + rew <= 10)
+					this->health = this->health + rew;
+				else
+					this->health = 10;
+			}
+
+			if (toDestroy->getRewardType() == energy)
+			{
+				this->energy = this->energy + rew;
+			}
+
+			//we now need to flip the tile that was destroyed
+
+
+			//this code is the same as in the flip tile method in the tiledeck, but I dont have to create an object to do it
+			switch (toDestroy->getUnit())
+			{
+			case Infantry: toDestroy->setRewardType(heart); break;
+			case Jet: toDestroy->setRewardType(static_cast<Rewards>(energy)); break;
+			case Tank: toDestroy->setRewardType(star); break;
+			}
+
+			int durability = toDestroy->getDurability();
+			durability++;
+			toDestroy->setDurability(durability);
+
+			toDestroy->setisUnit(true);
+
+			std::cout << "After Destruction: " << std::endl;
+			toDestroy->Print(); //print the tile after destruction
+
+			//we should also remove it from the linked list in case he wants to destroy more buildings
+			//we need to find the node that was destroyed in the list
+			j = 1;
+			current = buildings->getHead();
+
+			while (j < buildingSelected)
+			{
+				j++;
+				current = current->getNext();
+			}
+
+			//now that we have found the node, we can remove it
+			buildings->pull(current);
+
+			std::cout << "Building destroyed!" << std::endl;
+
+			//now that the building has been destroyed, if the player still has destruction dice, then we should ask him
+			//if he wants to destroy more buildings
+
+			if (destructionCount > 0)
+			{
+				//if he still has dice, we need to ask him if he wants to destroy some more buildings
+				bool valid = false; //check if the response was valid
+				do
+				{
+					try
+					{
+						//ask the player if we wants to destroy more buildings
+						std::cout << "You have " << destructionCount << " dice left for destruction. Would you like to destroy "
+							<< "more buildings? Please enter (Y/N): ";
+
+						//place the response in destroy response
+						std::cin >> destroyResponse;
+
+						if (destroyResponse != "Y" && destroyResponse != "N")
+						{
+							//if the response was invalid, then we throw it
+							throw destroyResponse;
+						}
+					}
+
+					catch (std::string e)
+					{
+						//if the response was invalid we are here
+						std::cout << "The response '" << destroyResponse << "' is invalid. Please try again..." << std::endl;
+						valid = false; //valid response is false and force a new iteration
+						continue;
+					}
+
+					//if the response was valid then we are here
+					valid = true;
+					//if he said yes then he wants to destroy more buildings
+					if (destroyResponse == "Y")
+						destroyMoreBuildings = true;
+
+					//otherwise he is done destroying
+					else
+						destroyMoreBuildings = false;
+
+				} while (!valid);
+
+			}
+
+			else
+			{
+				//if the player has no more destruction dice, then he is done
+				std::cout << "You don't have any more destruction dice." << std::endl;
+				destroyMoreBuildings = false;
+			}
+
+		}
+
+		catch (int e)
+		{
+			//if the player entered a number outside the bounds of the list
+			std::cout << "The number " << buildingSelected << " is not a valid choice. Please try again..." << std::endl;
+		}
+
+		catch (NotEnoughDestructionRolledException e)
+		{
+			//if we are here, it means that the player did not have enough destruction dice to destroy that building
+			std::cout << e.what() << std::endl;
+		}
+
+	} while (!validResponse || destroyMoreBuildings);
+}
+
+void Player::cpuDestroyBuildings(SinglyLinkedList<int>* buildings, int destructionCount) {
+	Tile* tileDeck;
+	tileDeck = TileDeck::getTileDeck();
+	//if the list was not empty, then we are here
+			//we should display all of the
+			//node<Tile>* current = buildings->getHead();
+	node<int>* current = buildings->getHead();
+	int nodeCount = 1; //this is to display the options for the player
+	bool validResponse = false; //to track if the response from the player was valid or not
+	bool destroyMoreBuildings = true; //to ask the player if he would like to destroy more buildings
+	std::string destroyResponse = ""; //the response of the player when he is asked if he would like to destroy more
+									  //buildings
+	int buildingSelected = 0;
+	do
+	{
+		//reinitialize the parameters in the case where the player wants to destroy more than one buildings
+		validResponse = false;
+		nodeCount = 1;
+		destroyMoreBuildings = true;
+		current = buildings->getHead();
+		destroyMoreBuildings = true;
+
+		//we need to get a response from the player
+		std::cout << "Please select a building to destroy: " << std::endl;
+
+		while (current != NULL)
+		{
+			//we should show him the information about the building
+			std::cout << nodeCount << ". ";
+			//current->getData().Print();
+			tileDeck[current->getData()].Print();
+			nodeCount++;
+			current = current->getNext();
+		}
+
+		//now that he has seen the options, he must select which building he would like to destroy
+		try
+		{
+
+			//we also need to check if the player has rolled enough destruction to detroy the building he wishes
+			//to destroy
+			//first we need to find the building that he wishes to destroy
+			current = buildings->getHead();
+			int j = 1; //we need to go up to the building that he said
+			//Tile toDestroy; //the tile that he wants to destroy
+			Tile* toDestroy = &tileDeck[current->getData()];
+			buildingSelected = 1;
+			Tile* currTile = NULL;
+			current = current->getNext();
+
+			while (current != NULL)
+			{
+				//toDestroy = current->getData(); //set the tile to destroy to the one in the current node
+				currTile = &tileDeck[current->getData()];
+				if(currTile->getDurability() <= destructionCount && currTile->getDurability() > toDestroy->getDurability())			// find building with highest durability to destroy
+					toDestroy = &tileDeck[current->getData()];
+				buildingSelected++;
+
+				current = current->getNext(); //move to the next node in the list
+			}
+
+			//now if the durability of the building is greater than the destruction count of the player, then we should throw
+			//an exception
+
+			if (toDestroy->getDurability() > destructionCount)
+			{
+				throw NotEnoughDestructionRolledException();
+			}
+
+			//if we made it here, it means that the response was valid
+			validResponse = true;
+
+			//now we should destroy the building that the player wants to destroy
+			//since this only works for buildings, the tile in question should be flipped
+
+			std::cout << "Before destruction: " << std::endl;
+
+			//we should decrease the destructionCount by the durability of the building
+			destructionCount -= toDestroy->getDurability();
+			toDestroy->Print(); //show the tile before destruction
+
+			int rew = toDestroy->getReward();
+
+			//we also need to assign the rewards for the player who destroyed the building
+
+			if (toDestroy->getRewardType() == star)
+			{
+				if (this->victoryPoints + rew <= 20)
+					this->victoryPoints = this->victoryPoints + rew;
+
+				else
+					this->victoryPoints = 20;
+			}
+
+			if (toDestroy->getRewardType() == heart)
+			{
+				if (this->health + rew <= 10)
+					this->health = this->health + rew;
+				else
+					this->health = 10;
+			}
+
+			if (toDestroy->getRewardType() == energy)
+			{
+				this->energy = this->energy + rew;
+			}
+
+			//we now need to flip the tile that was destroyed
+
+
+			//this code is the same as in the flip tile method in the tiledeck, but I dont have to create an object to do it
+			switch (toDestroy->getUnit())
+			{
+			case Infantry: toDestroy->setRewardType(heart); break;
+			case Jet: toDestroy->setRewardType(static_cast<Rewards>(energy)); break;
+			case Tank: toDestroy->setRewardType(star); break;
+			}
+
+			int durability = toDestroy->getDurability();
+			durability++;
+			toDestroy->setDurability(durability);
+
+			toDestroy->setisUnit(true);
+
+			std::cout << "After Destruction: " << std::endl;
+			toDestroy->Print(); //print the tile after destruction
+
+			//we should also remove it from the linked list in case he wants to destroy more buildings
+			//we need to find the node that was destroyed in the list
+			j = 1;
+			current = buildings->getHead();
+
+			while (j < buildingSelected)
+			{
+				j++;
+				current = current->getNext();
+			}
+
+			//now that we have found the node, we can remove it
+			buildings->pull(current);
+
+			std::cout << "Building destroyed!" << std::endl;
+
+			//now that the building has been destroyed, if the player still has destruction dice, then we should ask him
+			//if he wants to destroy more buildings
+
+			if (destructionCount > 0)
+			{
+				destroyMoreBuildings = true;
+			}
+
+			else
+			{
+				//if the player has no more destruction dice, then he is done
+				std::cout << "You don't have any more destruction dice." << std::endl;
+				destroyMoreBuildings = false;
+			}
+
+		}
+
+		catch (int e)
+		{
+			//if the player entered a number outside the bounds of the list
+			std::cout << "The number " << buildingSelected << " is not a valid choice. Please try again..." << std::endl;
+		}
+
+		catch (NotEnoughDestructionRolledException e)
+		{
+			//if we are here, it means that the player did not have enough destruction dice to destroy that building
+			std::cout << e.what() << std::endl;
+		}
+
+	} while (!validResponse || destroyMoreBuildings);
+}
+
+
+
 
 //a method for the player to purchase cards with his energy cubes
 void Player::buyCards(CardDeck* deck)
@@ -1366,6 +1598,261 @@ void Player::buyCards(CardDeck* deck)
 	}
 
 }
+
+void Player::cpuBuyCards(CardDeck* deck) {
+	//for the player to buy cards, since the deck is not static, we need to pass it the cardDeck in the method
+	//when the player wants to buy cards, the top three cards in the deck are revealed.
+	//since we know that three cards will be revealed, assuming there are three cards to reveal, then
+	//we should display those three cards
+
+	//we need to change the phase and notify the observers
+	phase = Buy;
+	notify();
+
+	int cardSelected = 0;
+	bool validResponse = true;
+
+
+	//if we have made it here, this means that the response was valid
+	//if the player said no, then we simply return since he does not want to buy cards
+
+	//this is the case where the player said yes to purchasing cards
+	bool newCardsRequested = false; //this will keep track of whether or not the player has requested new cards
+	bool moreCardsDesired = false; //this will keep track of whether or not the player would like
+									//to purchase more cards
+	SinglyLinkedList<Card>* topThree = deck->getDeck(); //the list of the cards that are still not discarded
+	node<Card>* currentCard = topThree->getHead(); //the head of the list
+	//we need to check if there are even three cards available
+	int count = topThree->getCount();
+	RandomNumberGenerator* r = new RandomNumberGenerator();
+	long* randomNumbers = r->randomGen(1, 1, 4);
+	bool buyCards = false;
+
+	if (getEnergy() == 0) {
+		std::cout << getName() << " has no energy, cannot buy cards." << std::endl;
+		return;
+	}
+
+	do
+	{
+		//first make sure that both the options are set to false so that we don't go into an infinite loop
+		moreCardsDesired = false;
+		newCardsRequested = false;
+
+		//we perform this operation so long as the player has requested new cards
+		std::cout << "Select a card from the following: " << std::endl;
+
+		//we need to display the top three cards from the deck for him to purchase
+		topThree = deck->getDeck();
+		currentCard = topThree->getHead();
+		count = topThree->getCount();
+
+		if (count >= 3)
+		{
+			//if there are at least three cards, then we should display three cards
+			for (int i = 0; i < 3; i++)
+			{
+				std::cout << (i + 1) << ". ";
+				currentCard->getData().Print();
+				currentCard = currentCard->getNext();
+			}
+
+			std::cout << "4. Reveal new cards (2 energy required)" << std::endl;
+		}
+
+		else if (count > 0)
+		{
+			//if there are still cards in the deck but less than 3, then we only display the ones that are available
+			int i = 0;
+			for (i = 0; i < count; i++)
+			{
+				std::cout << (i + 1) << ". ";
+				currentCard->getData().Print();
+				currentCard = currentCard->getNext();
+			}
+
+			std::cout << (i + 1) << ". Reveal new cards (2 energy required)" << std::endl;
+		}
+
+		else
+		{
+			//otherwise, if there are no cards in the deck, then obviously the player cannot purchase cards so we tell
+			//him and we return
+			std::cout << "The deck is empty!" << std::endl;
+			return;
+		}
+
+		//now that we have shown the top three cards, we need to ask the user to input a number between 1 and 3
+		//we have two cases to consider: either we have three or more cards, or we have less than 3
+
+		//first case where we have at least three cards
+		if (count >= 3)
+		{
+			//we need to ask the user for a number between 1 and 4 and we keep doing so until he enters something valid
+			//the fourth option is for him to reveal three new cards
+			do
+			{
+				try
+				{
+					//the user will enter a number between 1 and 3, or try again
+					//std::cout << "Please enter a number between 1 and 4: ";
+					randomNumbers = r->randomGen(1, 1, 4);
+					cardSelected = randomNumbers[0];
+
+					//if the number is less than 1 or greater than 3, then that is an invalid choice and we should start over
+					if (cardSelected < 1 || cardSelected > 3)
+						throw cardSelected;
+
+					//otherwise, the response was valid and we can move on
+					validResponse = true;
+				}
+
+				catch (int e)
+				{
+					//if the card was not 4
+					if (cardSelected != 4)
+					{
+						//std::cout << "The number \'" << cardSelected << "\' is invalid." << std::endl;
+						validResponse = false;
+					}
+
+					else
+					{
+						//if the player selected 4, then it is a valid response
+						validResponse = true;
+					}
+
+				}
+
+			} while (!validResponse);
+
+			//if the response was valid, then we are here.
+			//Either the player decided to reveal new cards, in which case the choice is 4
+
+			if (cardSelected == 4)
+			{
+				//in this case, we need to display new cards
+				//first we should check if the player has enough energy to do this
+
+				try
+				{
+					if (energy < 2)
+					{
+						throw NotEnoughEnergyException();
+					}
+
+					//if he does have enough energy, then we need to place the first three cards to the back of the deck,
+					//and then restart the process by setting the newCardsRequested parameter to true and calling a new iteration
+
+					//the process needs to be done three times
+
+					for (int i = 0; i < 3; i++)
+					{
+						node<Card> *card = topThree->getHead();
+						topThree->remove(card); //remove the card from the deck
+						topThree->addLast(card); //add it back to the end
+					}
+
+					//now that the cards have been moved, set newCardsRequested to true and continue
+					//we also need to decrease the player's energy by 2
+					energy -= 2;
+					newCardsRequested = true;
+					continue;
+
+				}
+
+				catch (NotEnoughEnergyException e)
+				{
+					//display the error message
+					std::cout << e.what();
+					//if the player requested new cards, then he was not happy with the initial cards, and so if he doesn't
+					//have enough to reveal new, then we simply return
+					return;
+				}
+
+			}
+
+			//in the other case, where the player wants to purchase one of the selected cards
+			//We now need to retrieve the card that the player requested
+			//and add it to his deck, at the same time removing it from the deck
+			//begin at the head
+			else
+			{
+				currentCard = topThree->getHead();
+				int j = 1;
+
+				while (j < cardSelected)
+				{
+					//while we are still not at the card he wanted, we move down the list until we find it
+					j++;
+					currentCard = currentCard->getNext();
+				}
+
+
+				//now that the current card pointer points to the card that he wants, add it to his hand
+				Card toAdd = currentCard->getData();
+				cout << getName() << " has bought card " << toAdd.getName() << endl;
+				node<Card> cardToAdd;
+				cardToAdd.setData(toAdd);
+
+				//we need to check if the player has enough energy to actually purchase the card
+				try
+				{
+					if (energy >= toAdd.getCost())
+					{
+						//if the energy was greater than the cost of the card, then the player can purchase it
+						cards->add(&cardToAdd); //add the card to the player's cards
+						topThree->remove(currentCard); //remove it from the cards available
+						//finally, decrease the energy of the player by the cost of the card
+						energy = energy - toAdd.getCost();
+					}
+
+					else
+					{
+						throw NotEnoughEnergyException();
+					}
+				}
+
+				catch (NotEnoughEnergyException e)
+				{
+					std::cout << e.what() << std::endl;
+				}
+
+				//regardless of whether or not the card was purchased, we need to ask the player if he wants to purchase another card
+				//we will once again need to check the validity of his response
+				randomNumbers = r->randomGen(1, 0, 1);
+				buyCards = randomNumbers[0];
+
+				//now that we have a valid response:
+
+				//if the user said yes, then set moreCardsDesired to true and repeat
+				//otherwise we simply return
+
+				if (buyCards)
+				{
+					moreCardsDesired = true;
+					continue;
+				}
+
+			}
+
+		}
+
+		//TODO now for the case where we have less than three cards
+
+	} while (newCardsRequested || moreCardsDesired); //repeat as long as he wants more cards, or he wants to purchase
+													//more from the three already revealed
+	delete r;
+	r = NULL;
+	delete[] randomNumbers;
+	randomNumbers = NULL;
+
+	
+}
+
+
+
+
 
 void Player::removePlayer(Characters name) {
 	node<Player*>* player = players->getHead();

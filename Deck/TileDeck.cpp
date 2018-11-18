@@ -22,19 +22,19 @@ TileDeck::TileDeck()
 			tileDeck[i].setDurability(1);
 			tileDeck[i].setUnit(Infantry);
 			tileDeck[i].setReward(1);
-			tileDeck[i].setZone(0);
+			//tileDeck[i].setZone(0);
 		}
 		else if (i < 10) {
 			tileDeck[i].setDurability(2);
 			tileDeck[i].setUnit(Jet);
 			tileDeck[i].setReward(2);
-			tileDeck[i].setZone(2);
+			//tileDeck[i].setZone(2);
 		}
 		else {
 			tileDeck[i].setDurability(3);
 			tileDeck[i].setUnit(Tank);
 			tileDeck[i].setReward(3);
-			tileDeck[i].setZone(3);
+			//tileDeck[i].setZone(3);
 		}
 		tileDeck[i].setRewardType(star);
 		tileDeck[i].setisUnit(false);
@@ -46,19 +46,19 @@ TileDeck::TileDeck()
 			tileDeck[i].setDurability(1);
 			tileDeck[i].setUnit(Infantry);
 			tileDeck[i].setReward(1);
-			tileDeck[i].setZone(8);
+			//tileDeck[i].setZone(8);
 		}
 		else if (i < 25) {
 			tileDeck[i].setDurability(2);
 			tileDeck[i].setUnit(Jet);
 			tileDeck[i].setReward(2);
-			tileDeck[i].setZone(9);
+			//tileDeck[i].setZone(9);
 		}
 		else {
 			tileDeck[i].setDurability(3);
 			tileDeck[i].setUnit(Tank);
 			tileDeck[i].setReward(3);
-			tileDeck[i].setZone(10);
+			//tileDeck[i].setZone(10);
 		}
 		tileDeck[i].setRewardType(energy);
 		tileDeck[i].setisUnit(false);
@@ -70,25 +70,70 @@ TileDeck::TileDeck()
 			tileDeck[i].setDurability(1);
 			tileDeck[i].setUnit(Infantry);
 			tileDeck[i].setReward(1);
-			tileDeck[i].setZone(7);
+			//tileDeck[i].setZone(7);
 		}
 		else if (i < 35) {
 			tileDeck[i].setDurability(2);
 			tileDeck[i].setUnit(Jet);
 			tileDeck[i].setReward(2);
-			tileDeck[i].setZone(6);
+			//tileDeck[i].setZone(6);
 		}
 		else {
 			tileDeck[i].setDurability(3);
 			tileDeck[i].setUnit(Tank);
 			tileDeck[i].setReward(3);
-			tileDeck[i].setZone(5);
+			//tileDeck[i].setZone(5);
 		}
 		tileDeck[i].setRewardType(heart);
 		tileDeck[i].setisUnit(false);
 	}
 	Shuffle();
 	Shuffle();
+
+	int playerCount = Player::getPlayerCount();
+	i = 0;
+	// PUT 3 TILES IN LOWER MANHATTEN
+	// ZONE 1 is for 2-4 players, ZONE 4 is for 5-6 players
+	for (i; i < 3; i++) {
+		if (playerCount < 5)
+			tileDeck[i].setZone(1);
+		else
+			tileDeck[i].setZone(4);
+	}
+
+	// PUT 3 TILES IN MIDTOWN MANHATTEN
+	// ZONE 2 is for 2-4 players, ZONE 5 is for 5-6 players
+	for (i; i < 6; i++) {
+		if (playerCount < 5)
+			tileDeck[i].setZone(2);
+		else
+			tileDeck[i].setZone(5);
+	}
+
+	// PUT 3 TILES IN UPPER MANHATTEN
+	// ZONE 3 is for 2-4 players, ZONE 6 is for 5-6 players
+	for (i; i < 9; i++) {
+		if (playerCount < 5)
+			tileDeck[i].setZone(3);
+		else
+			tileDeck[i].setZone(6);
+	}
+
+	// PUT 9 TILES IN BRONX
+	for (i; i < 18; i++)
+		tileDeck[i].setZone(7);
+
+	// PUT 9 TILES IN QUEENS
+	for (i; i < 27; i++)
+		tileDeck[i].setZone(8);
+
+	// PUT 9 TILES IN STATEN ISLAND
+	for (i; i < 36; i++)
+		tileDeck[i].setZone(9);
+
+	// PUT 9 TILES IN BROOKLYN
+	for (i; i < 45; i++)
+		tileDeck[i].setZone(10);
 }
 
 TileDeck::~TileDeck() {
