@@ -1,7 +1,8 @@
 #ifndef TILEDECK_H
-#define TILEDECK_h
+#define TILEDECK_H
 
 #include "Tile.h"
+#include "../Player/Player.h"
 #include <cstdlib>
 
 class TileDeck

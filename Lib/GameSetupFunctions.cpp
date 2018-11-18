@@ -3,13 +3,20 @@
 #include "../Dice/DiceFaces.h"
 #include "Exceptions/DirectoryNotFoundException.h"
 #include "Exceptions/NodeFullException.h"
+//#include "DiceFaces.h"
+//#include "DirectoryNotFoundException.h"
+//#include "NodeFullException.h"
 #include <dirent.h>
 #include "../Dice/GreenDice.h"
+//#include "GreenDice.h"
+#include "StrategyPattern/HumanPlayerStrategy.h"
+#include "StrategyPattern/AggressivePlayerStrategy.h"
+#include "StrategyPattern/ModeratePlayerStrategy.h"
 
 int GameSetupFunctions::getNumberOfPlayers()
 {
   //set the number of players that will be playing the game, assuming the number entered is between 2 and 6
-  std::cout << "Please enter the number of players: ";
+  std::cout << "Please enter the number of players (including 2 CPU): ";
 
   int numberOfPlayers = 0; //the number of players
 
@@ -27,90 +34,133 @@ int GameSetupFunctions::getNumberOfPlayers()
 
 void GameSetupFunctions::initializePlayers(int numberOfPlayers)
 {
-  //a method to initialize all the player characters that will be playing the game
+	//a method to initialize all the player characters that will be playing the game
 
-  enum Characters* chosenCharacters = new enum Characters[numberOfPlayers]; //an array to hold all the characters that the players have chosen so far
-                                                                            //to make sure no character is repeated
+	enum Characters* chosenCharacters = new enum Characters[numberOfPlayers]; //an array to hold all the characters that the players have chosen so far
+																			  //to make sure no character is repeated
 
-  for(int k = 0; k<numberOfPlayers; k++)
-  {
-    chosenCharacters[k] = None; //initialize all to none
-  }
+	for (int k = 0; k < numberOfPlayers; k++)
+	{
+		chosenCharacters[k] = None; //initialize all to none
+	}
 
-  std::cout << "Choose your characters!" << std::endl;
-  std::string playerName; //the name of the new player that will be obtained from command line
-  Player* newPlayer; //this will point to the player being set up
+	std::cout << "Choose your characters!" << std::endl;
+	std::string playerName; //the name of the new player that will be obtained from command line
+	Player* newPlayer; //this will point to the player being set up
 
-  for(int i = 0; i<numberOfPlayers; i++)
-  {
-    //for each player, set the name of the player
-    std::cout << "Player " << (i + 1) << " please enter your name: "; //let the player enter his name
-    std::cin >> playerName; //get name input
+	for (int i = 0; i < numberOfPlayers-2; i++)
+	{
+		//for each player, set the name of the player
+		std::cout << "Player " << (i + 1) << " please enter your name: "; //let the player enter his name
+		std::cin >> playerName; //get name input
 
-    //create a new player
-    newPlayer = new Player();
-    newPlayer -> setName(playerName); //set the name of the player
-    std::cout << newPlayer -> getName() << "," << " please choose your character: " << std::endl; //now the player must choose his character
+		//create a new player
+		newPlayer = new Player();
+		newPlayer->setName(playerName); //set the name of the player
+		newPlayer->setStrategy(new HumanPlayerStrategy());
+		std::cout << newPlayer->getName() << "," << " please choose your character: " << std::endl; //now the player must choose his character
 
-    int characterChoice = 1; //simply to print a number of selecting that character
+		int characterChoice = 1; //simply to print a number of selecting that character
 
-    for(int j = 0; j < 6; j++)
-    {
-        //output all the characters
-        std::cout << characterChoice << ". " << CharacterMethods::characterToString(static_cast<Characters>(j)) << std::endl;
-        characterChoice++;
-    }
+		for (int j = 0; j < 6; j++)
+		{
+			//output all the characters
+			std::cout << characterChoice << ". " << CharacterMethods::characterToString(static_cast<Characters>(j)) << std::endl;
+			characterChoice++;
+		}
 
-    //we need to make sure that the character that was chosen was not already picked
-    //then we ask the player to enter a number corresponding to the character he wants to play as
-    bool chosenValid = false; //a boolean to check if the chosen character was valid or not
-    int characterChosen = 0; //the character chosen by the player
+		//we need to make sure that the character that was chosen was not already picked
+		//then we ask the player to enter a number corresponding to the character he wants to play as
+		bool chosenValid = false; //a boolean to check if the chosen character was valid or not
+		int characterChosen = 0; //the character chosen by the player
 
-    while(!chosenValid)
-    {
-      //ask the player to enter a number corresponding to the character he wants
-      try
-      {
-        //player enters the character number he wants
-        std::cout << "Enter the number for the character you would like to be: ";
-        std::cin >> characterChosen;
+		while (!chosenValid)
+		{
+			//ask the player to enter a number corresponding to the character he wants
+			try
+			{
+				//player enters the character number he wants
+				std::cout << "Enter the number for the character you would like to be: ";
+				std::cin >> characterChosen;
 
-        //if the number is negative or greater than 6, then that value is not valid and we throw an exception
-        if(characterChosen < 1 || characterChosen > 6)
-        {
-          throw characterChosen;
-        }
+				//if the number is negative or greater than 6, then that value is not valid and we throw an exception
+				if (characterChosen < 1 || characterChosen > 6)
+				{
+					throw characterChosen;
+				}
 
-        //we also need to check if that value has already been chosen by another player
-        for(int l = 0; l<numberOfPlayers; l++)
-        {
-          //for each character in the array of chosen characters, check that that character is not equal to the character the player wants
-          if(static_cast<int>(chosenCharacters[l]) == characterChosen - 1)
-          {
-            throw characterChosen;
-          }
-        }
+				//we also need to check if that value has already been chosen by another player
+				for (int l = 0; l < numberOfPlayers; l++)
+				{
+					//for each character in the array of chosen characters, check that that character is not equal to the character the player wants
+					if (static_cast<int>(chosenCharacters[l]) == characterChosen - 1)
+					{
+						throw characterChosen;
+					}
+				}
 
-        //if we made it here without an exception, then we are done
-        chosenValid = true; //set this to true so we exit the while loop after we are done setting the character
-      }
+				//if we made it here without an exception, then we are done
+				chosenValid = true; //set this to true so we exit the while loop after we are done setting the character
+			}
 
-      catch(int e)
-      {
-        //catch the thrown integer if there was an exception
-        std::cout << "The desired character has already been chosen! Please try again...";
-        continue; //restart the process
-      }
+			catch (int e)
+			{
+				//catch the thrown integer if there was an exception
+				std::cout << "The desired character has already been chosen! Please try again...";
+				continue; //restart the process
+			}
 
 
-      //then we need to set the character he has chosen to be his character if it was a valid choice
-      newPlayer -> setCharacter(static_cast<Characters>(characterChosen - 1));
-      //also modify the entry in the array of already chosen characters
-      chosenCharacters[i] = static_cast<Characters>(characterChosen - 1);
-    }
+			//then we need to set the character he has chosen to be his character if it was a valid choice
+			newPlayer->setCharacter(static_cast<Characters>(characterChosen - 1));
+			//also modify the entry in the array of already chosen characters
+			chosenCharacters[i] = static_cast<Characters>(characterChosen - 1);
+		}
 
-  }
+	}
 
+	bool chosen = false;
+	int chose = 0;
+	newPlayer = new Player();
+	newPlayer->setName("Aggressive CPU");
+	newPlayer->setStrategy(new AggressivePlayerStrategy());
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < numberOfPlayers; j++) {
+			if (static_cast<int>(chosenCharacters[j] == i)) {
+				chosen = true;
+				break;
+			}
+		}
+		if (!chosen) {
+			chose = i;
+			break;
+		}
+		chosen = false;
+	}
+	newPlayer->setCharacter(static_cast<Characters>(chose));
+	chosenCharacters[chose] = static_cast<Characters>(chose);
+
+	chosen = false;
+	chose = 0;
+	newPlayer = new Player();
+	newPlayer->setName("Moderate CPU");
+	newPlayer->setStrategy(new ModeratePlayerStrategy());
+	for (int i = 0; i < 6; i++) {
+		for (int j = 0; j < numberOfPlayers; j++) {
+			if (static_cast<int>(chosenCharacters[j] == i)) {
+				chosen = true;
+				break;
+			}
+		}
+		if (!chosen) {
+			chose = i;
+			break;
+		}
+		chosen = false;
+	}
+	newPlayer->setCharacter(static_cast<Characters>(chose));
+	chosenCharacters[chose] = static_cast<Characters>(chose);
+	   	 
   //since we no longer need the array of chosen characters, we need to free up the memory
   delete[] chosenCharacters;
   chosenCharacters = NULL;
@@ -142,97 +192,123 @@ void GameSetupFunctions::setPlayerStartZones()
   int currPlayer = 0;
 
   //we need to set the zone for each player one by one
-  while(curr != NULL)
+  while (curr != NULL)
   {
-    //for each player, list all the zones that are available in the graph and allow him to choose the position that he wants
-    //assuming that it is valid
+	  if (curr->getData()->getName() == "Aggressive CPU" || curr->getData()->getName() == "Moderate CPU") {
+		  cout << "CPU zone pick" << endl;
+		  int nbOfPlayersInStartZone; //this will track the number of players in the zone where the player wants to start
 
-    int vertexCount = 1; //the number that will be placed next to the vertex when giving the player the choice of his start vertex
+		  for (int i = 0; i < MapLoader::getMap()->getVertexCount(); i++) {
+			  nbOfPlayersInStartZone = 0;
+			  if (MapLoader::getMap()->getVertex(i)->getData() != "master" && MapLoader::getMap()->getVertex(i)->getData() != "inner")
+			  {
+				  for (int j = 0; j < playerList->getCount(); j++)
+				  {
+					  if (playerPositions[j] == i)
+						  nbOfPlayersInStartZone++;
+				  }
+				  if (nbOfPlayersInStartZone < 2) {
+					  curr->getData()->setZone(i);
+					  playerPositions[currPlayer] = i;
+					  break;
+				  }
+			  }
+		  }
+		  std::cout << curr->getData()->getName() << ", you will begin in " << MapLoader::getMap()->getVertex(curr->getData()->getZone())->toString() << "." << std::endl;
+		  curr = curr->getNext();
+		  currPlayer++;
+	  }
+	  else {
+		  //for each player, list all the zones that are available in the graph and allow him to choose the position that he wants
+		  //assuming that it is valid
 
-    //now that all the vertices have been displayed, we need to allow the player to choose the vertex where he wants to start
-    std::cout << curr -> getData() -> getName() << "," << " please select the location where you would like your adventure to begin: " << std::endl;
+		  int vertexCount = 1; //the number that will be placed next to the vertex when giving the player the choice of his start vertex
 
-    for(int j = 0; j < MapLoader::getMap() -> getVertexCount(); j++)
-    {
-      //output the vertex that the player can choose from
-      std::cout << vertexCount << ". " << MapLoader::getMap() -> getVertex(j) -> toString() << std::endl;
-      vertexCount++; //increment the vertex count so that it is displayed properly in the next iteration
-    }
+		  //now that all the vertices have been displayed, we need to allow the player to choose the vertex where he wants to start
+		  std::cout << curr->getData()->getName() << "," << " please select the location where you would like your adventure to begin: " << std::endl;
 
-    //we need to check that the vertex he has selected is valid
-    bool startIsValid = false; //this will keep track of whether or not he has selected a valid vertex
+		  for (int j = 0; j < MapLoader::getMap()->getVertexCount(); j++)
+		  {
+			  //output the vertex that the player can choose from
+			  std::cout << vertexCount << ". " << MapLoader::getMap()->getVertex(j)->toString() << std::endl;
+			  vertexCount++; //increment the vertex count so that it is displayed properly in the next iteration
+		  }
 
-    while(!startIsValid)
-    {
-      int startVertex = 0; //the vertex where the player wants to begin
-      bool vertexOutOfBounds = false; //a check to see if the vertex is out of bounds
-      bool vertexIsInMaster = false; //a check to see if the vertex is in the master zone (i.e. manhattan)
+		  //we need to check that the vertex he has selected is valid
+		  bool startIsValid = false; //this will keep track of whether or not he has selected a valid vertex
 
-      try
-      {
-        std::cout << "Please enter a number corresponding to the location you would like to start at: ";
-        std::cin >> startVertex; //place the input in the startVertex variable
+		  while (!startIsValid)
+		  {
+			  int startVertex = 0; //the vertex where the player wants to begin
+			  bool vertexOutOfBounds = false; //a check to see if the vertex is out of bounds
+			  bool vertexIsInMaster = false; //a check to see if the vertex is in the master zone (i.e. manhattan)
 
-        if((startVertex - 1) < 1 || (startVertex - 1) > MapLoader::getMap() -> getVertexCount())
-        {
-          //if the chosen vertex is outside of the bounds that are acceptable, then throw an error
-          vertexOutOfBounds = true; //the vertex is out of bounds
-          throw startVertex;
-        }
+			  try
+			  {
+				  std::cout << "Please enter a number corresponding to the location you would like to start at: ";
+				  std::cin >> startVertex; //place the input in the startVertex variable
 
-        if(MapLoader::getMap() -> getVertex(startVertex - 1) -> getData() == "master" || MapLoader::getMap() -> getVertex(startVertex - 1) -> getData() == "inner")
-        {
-          //if the requested vertex is a master or inner type vertex that mean it is either manhattan or one of its inner zones
-          //the rules state that a player cannot start in manhattan, and therefore these zones are invalid as start zones
-          vertexIsInMaster = true;
-          throw startVertex;
-        }
+				  if ((startVertex - 1) < 1 || (startVertex - 1) > MapLoader::getMap()->getVertexCount())
+				  {
+					  //if the chosen vertex is outside of the bounds that are acceptable, then throw an error
+					  vertexOutOfBounds = true; //the vertex is out of bounds
+					  throw startVertex;
+				  }
 
-        //we should also verify if the node that the player wants to move to already has two players in it
-        //compare the vertex the player wants to start at to the position of each other player
-        int nbOfPlayersInStartZone = 0; //this will track the number of players in the zone where the player wants to start
+				  if (MapLoader::getMap()->getVertex(startVertex - 1)->getData() == "master" || MapLoader::getMap()->getVertex(startVertex - 1)->getData() == "inner")
+				  {
+					  //if the requested vertex is a master or inner type vertex that mean it is either manhattan or one of its inner zones
+					  //the rules state that a player cannot start in manhattan, and therefore these zones are invalid as start zones
+					  vertexIsInMaster = true;
+					  throw startVertex;
+				  }
 
-        for(int i = 0; i < playerList -> getCount(); i++)
-        {
-          if(playerPositions[i] == (startVertex - 1))
-            nbOfPlayersInStartZone++;
-        }
+				  //we should also verify if the node that the player wants to move to already has two players in it
+				  //compare the vertex the player wants to start at to the position of each other player
+				  int nbOfPlayersInStartZone = 0; //this will track the number of players in the zone where the player wants to start
 
-        //if there are two or more players in that zone, then the start zone is not valid and we should throw an exception
-        if(nbOfPlayersInStartZone >= 2)
-          throw NodeFullException();
+				  for (int i = 0; i < playerList->getCount(); i++)
+				  {
+					  if (playerPositions[i] == (startVertex - 1))
+						  nbOfPlayersInStartZone++;
+				  }
 
-        //if we made it here without throwing an exception, then our location is valid
+				  //if there are two or more players in that zone, then the start zone is not valid and we should throw an exception
+				  if (nbOfPlayersInStartZone >= 2)
+					  throw NodeFullException();
 
-        curr -> getData() -> setZone(startVertex - 1); //set the zone to the one indicated, minus one since in our choices we start at 1
-        std::cout << curr -> getData() -> getName() << ", you will begin in " << MapLoader::getMap() -> getVertex(curr -> getData() -> getZone()) -> toString() << "." << std::endl;
-        playerPositions[currPlayer] = startVertex - 1;
-        startIsValid = true; //the user has entered a valid start point
-      }
+				  //if we made it here without throwing an exception, then our location is valid
 
-      catch(int e)
-      {
-        if(vertexOutOfBounds)
-        {
-          std::cout << "The desired location is not within the game boundaries! Please try again..." << std::endl;
-        }
+				  curr->getData()->setZone(startVertex - 1); //set the zone to the one indicated, minus one since in our choices we start at 1
+				  std::cout << curr->getData()->getName() << ", you will begin in " << MapLoader::getMap()->getVertex(curr->getData()->getZone())->toString() << "." << std::endl;
+				  playerPositions[currPlayer] = startVertex - 1;
+				  startIsValid = true; //the user has entered a valid start point
+			  }
 
-        if(vertexIsInMaster)
-        {
-          //if the vertex is within the master zone, i.e. manhattan, it is not valid
-          std::cout << "The desired location is within the master zone! Please try again..." << std::endl;
-        }
-      }
+			  catch (int e)
+			  {
+				  if (vertexOutOfBounds)
+				  {
+					  std::cout << "The desired location is not within the game boundaries! Please try again..." << std::endl;
+				  }
 
-      catch(NodeFullException e)
-      {
-        std::cout << e.what() << std::endl;
-      }
-    }
+				  if (vertexIsInMaster)
+				  {
+					  //if the vertex is within the master zone, i.e. manhattan, it is not valid
+					  std::cout << "The desired location is within the master zone! Please try again..." << std::endl;
+				  }
+			  }
 
-    //move to the next player
-    curr = curr -> getNext();
-    currPlayer++;
+			  catch (NodeFullException e)
+			  {
+				  std::cout << e.what() << std::endl;
+			  }
+		  }
+
+		  //move to the next player
+		  curr = curr->getNext();
+		  currPlayer++;
+	  }
   }
 
   //finally make sure we clear the memory
