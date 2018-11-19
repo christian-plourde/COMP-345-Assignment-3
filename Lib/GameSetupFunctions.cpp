@@ -3,12 +3,8 @@
 #include "../Dice/DiceFaces.h"
 #include "Exceptions/DirectoryNotFoundException.h"
 #include "Exceptions/NodeFullException.h"
-//#include "DiceFaces.h"
-//#include "DirectoryNotFoundException.h"
-//#include "NodeFullException.h"
 #include <dirent.h>
 #include "../Dice/GreenDice.h"
-//#include "GreenDice.h"
 #include "StrategyPattern/HumanPlayerStrategy.h"
 #include "StrategyPattern/AggressivePlayerStrategy.h"
 #include "StrategyPattern/ModeratePlayerStrategy.h"
@@ -160,7 +156,7 @@ void GameSetupFunctions::initializePlayers(int numberOfPlayers)
 	}
 	newPlayer->setCharacter(static_cast<Characters>(chose));
 	chosenCharacters[chose] = static_cast<Characters>(chose);
-	   	 
+
   //since we no longer need the array of chosen characters, we need to free up the memory
   delete[] chosenCharacters;
   chosenCharacters = NULL;

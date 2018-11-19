@@ -3,10 +3,8 @@
 
 #include <string>
 #include "Characters.h"
-//#include "../Lib/StringFunctions.h"
-#include "StringFunctions.h"
-#include "CharacterMethods.h"
-/*#include "../Dice/Dice.h" //each player should have a dice object
+#include "../Lib/StringFunctions.h"
+#include "../Dice/Dice.h" //each player should have a dice object
 #include "../Graph/Graph.h"
 #include "../Lib/Exceptions/MasterNodeFullException.h"
 #include "../MapLoader/MapLoader.h"
@@ -15,27 +13,13 @@
 #include "../Lib/Exceptions/NotEnoughDestructionRolledException.h"
 #include "../Lib/Exceptions/MapNotLoadedException.h"
 #include "../Deck/TileDeck.h"
-#include "../Lib/ObserverPattern/Subject.h"*/
-#include "Dice.h"
-#include "Graph.h"
-#include "MasterNodeFullException.h"
-#include "MapLoader.h"
-#include "CardDeck.h"
-#include "NotEnoughEnergyException.h"
-#include "NotEnoughDestructionRolledException.h"
-#include "MapNotLoadedException.h"
-#include "TileDeck.h"
-#include "Subject.h"
+#include "../Lib/ObserverPattern/Subject.h"
 #include "Phase.h"
-/*#include "../Lib/ObserverPattern/Observer.h"
+#include "../Lib/ObserverPattern/Observer.h"
 #include "../Lib/ObserverPattern/GameStatisticsObserver.h"
-#include "../Lib/ObserverPattern/GamePhaseObserver.h"*/
-#include "Observer.h"
-#include "GameStatisticsObserver.h"
-#include "GamePhaseObserver.h"
+#include "../Lib/ObserverPattern/GamePhaseObserver.h"
 #include "../Lib/StrategyPattern/Strategy.h"
-//#include "Strategy.h"
-#include "RandomNumberGenerator.h"
+#include "../Lib/RandomNumberGenerator/RandomNumberGenerator.h"
 
 //the player class will be a subject being observed for the game statistics
 class Player : public Subject

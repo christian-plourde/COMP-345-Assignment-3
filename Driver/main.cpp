@@ -1,11 +1,8 @@
-/*#include "../Dice/Dice.h"
+#include "../Dice/Dice.h"
 #include "../Player/Player.h"
 #include "../MapLoader/MapLoader.h"
-#include "../Lib/GameSetupFunctions.h"*/
-#include "Dice.h"
-#include "Player.h"
-#include "MapLoader.h"
-#include "GameSetupFunctions.h"
+#include "../Lib/GameSetupFunctions.h"
+
 
 #include <iostream>
 #include <string>
@@ -58,8 +55,8 @@ int main()
 	node<Player*>* playerNodes = Player::players->getHead();		// list of players to go through for game loop
 	Player* playerData = playerNodes->getData();					// holds data about current player
 	CardDeck* cardDeck = new CardDeck();							// creates a deck of cards
-	
-	
+
+
 	const int WINNING_VICTORY_POINTS = 20;							// total number of victory points required for winning
 	bool hasWon = false;											// flag for if any player has won
 

@@ -1,8 +1,8 @@
 #include <string>
 #include <iostream>
-//#include "../Lib/Exceptions/NodeFullException.h"
-#include "NodeFullException.h"
+#include "../Lib/Exceptions/NodeFullException.h"
 #include "Player.h"
+#include "CharacterMethods.h"
 
 //declaring the static variables
 int Player::playerCount = 0;
@@ -1279,6 +1279,7 @@ void Player::cpuDestroyBuildings(SinglyLinkedList<int>* buildings, int destructi
 		{
 			//if we are here, it means that the player did not have enough destruction dice to destroy that building
 			std::cout << e.what() << std::endl;
+			destroyMoreBuildings = false;
 		}
 
 	} while (!validResponse || destroyMoreBuildings);
@@ -1847,7 +1848,7 @@ void Player::cpuBuyCards(CardDeck* deck) {
 	delete[] randomNumbers;
 	randomNumbers = NULL;
 
-	
+
 }
 
 
