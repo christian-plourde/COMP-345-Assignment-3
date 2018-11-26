@@ -1280,6 +1280,7 @@ void Player::cpuDestroyBuildings(SinglyLinkedList<int>* buildings, int destructi
 			//if we are here, it means that the player did not have enough destruction dice to destroy that building
 			std::cout << e.what() << std::endl;
 			destroyMoreBuildings = false;
+			validResponse = true;
 		}
 
 	} while (!validResponse || destroyMoreBuildings);
